@@ -1,3 +1,6 @@
+import json
+import os
+
 class MACProcessor:
     """
     NPU의 핵심 연산인 MAC(Multiply-Accumulate)과 부동소수점 오차 기반 판정을 담당하는 코어 엔진.
@@ -73,4 +76,37 @@ class DataValidator:
                 
             # 검증 실패 시 에러 메시지 출력 후 while 루프 처음으로 돌아감
             print("입력 형식 오류: 각 줄에 3개의 숫자를 공백으로 구분해 입력하세요.")
+            
+    @staticmethod
+    def load_json_data(file_path: str) -> dict:
+        """
+        data.json 파일을 읽어서 파이썬 딕셔너리로 역직렬화(Deserialization)해.
+        파일 누락이나 포맷 에러 시 프로그램이 뻗지 않도록 방어 로직이 적용되어 있어.
+        """
+        if not os.path.exists(file_path):
+            print(f"오류: {file_path} 파일을 찾을 수 없어.")
+            return {}
+        
+        try:
+            # 컨텍스트 매니저(with)를 사용해 안전하게 I/O 스트림 제어
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data
+        except json.JSONDecodeError:
+            print("오류: JSON 파일 형식이 올바르지 않아.")
+            return {}
+
+    @staticmethod
+    def normalize_label(label: str) -> str:
+        """
+        다양한 형태의 라벨('+', 'cross', 'x')을 시스템 표준 라벨('Cross', 'X')로 정규화해.
+        """
+        label = label.strip().lower()
+        if label in ['+', 'cross']:
+            return "Cross"
+        elif label == 'x':
+            return "X"
+        return label  # 예외적인 라벨은 그대로 반환해서 나중에 FAIL 처리되도록 둠
+            
+            
 
