@@ -1,3 +1,4 @@
+import time
 import json
 import os
 
@@ -107,6 +108,65 @@ class DataValidator:
         elif label == 'x':
             return "X"
         return label  # 예외적인 라벨은 그대로 반환해서 나중에 FAIL 처리되도록 둠
-            
-            
 
+class PerformanceAnalyzer:
+    """
+    순수 MAC 연산 구간의 실행 시간을 측정하고 성능 벤치마크 표를 출력하는 분석기.
+    """
+    
+    @staticmethod
+    def measure_mac_time(pattern: list[list[float]], filter_mat: list[list[float]], iterations: int = 10) -> float:
+        """
+        I/O 로직을 배제하고 순수 MAC 연산만 10회 반복 측정해 평균 시간(ms)을 반환해.
+        """
+        # 캐시 워밍업 (실전과 비슷한 메모리 적재 상태를 만들기 위해 1회 사전 실행)
+        MACProcessor.calculate_mac(pattern, filter_mat)
+        
+        start_time = time.perf_counter()
+        
+        for _ in range(iterations):
+            MACProcessor.calculate_mac(pattern, filter_mat)
+            
+        end_time = time.perf_counter()
+        
+        # 총 걸린 시간을 반복 횟수로 나누고 1000을 곱해 ms 단위로 변환
+        avg_time_ms = ((end_time - start_time) / iterations) * 1000
+        return avg_time_ms
+
+    @staticmethod
+    def print_performance_table(performance_data: list[dict]):
+        """
+        크기별 평균 연산 시간과 연산 횟수(N^2)를 표 형태로 출력해.
+        performance_data 예시: [{"size": 3, "time": 0.012}, {"size": 5, "time": 0.031}]
+        """
+        print("\n#---------------------------------------")
+        print("# [3] 성능 분석 (평균/10회)")
+        print("#---------------------------------------")
+        print(f"{'크기':<10} {'평균 시간(ms)':<15} {'연산 횟수'}")
+        print("-" * 37)
+        
+        for data in performance_data:
+            n = data["size"]
+            avg_time = data["time"]
+            operations = n * n
+            print(f"{f'{n}x{n}':<10} {avg_time:<15.3f} {operations}")
+
+
+class ResultReporter:
+    """
+    JSON 기반 일괄 테스트(모드 2)의 최종 통과/실패 결과를 요약 출력하는 리포터.
+    """
+    
+    @staticmethod
+    def print_summary(total: int, passed: int, failed: int, fail_cases: list[dict]):
+        print("\n#---------------------------------------")
+        print("# [4] 결과 요약")
+        print("#---------------------------------------")
+        print(f"총 테스트: {total}개")
+        print(f"통과: {passed}개")
+        print(f"실패: {failed}개")
+        
+        if failed > 0:
+            print("\n실패 케이스:")
+            for case in fail_cases:
+                print(f"- {case['id']}: {case['reason']}")
