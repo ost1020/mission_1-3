@@ -38,6 +38,54 @@ class MACProcessor:
         
         return label_a if score_a > score_b else label_b
     
+    @staticmethod
+    def calculate_mac_1d(pattern: list[list[float]], filter_mat: list[list[float]]) -> float:
+        """
+        [보너스 과제 1] 2차원 배열을 1차원으로 평탄화하여 메모리 접근을 단순화한 최적화된 MAC 연산.
+        """
+        # 리스트 내포를 활용한 2D -> 1D 평탄화 (Flattening)
+        flat_pattern = [val for row in pattern for val in row]
+        flat_filter = [val for row in filter_mat for val in row]
+        
+        mac_result = 0.0
+        
+        # O(N^2) 크기지만, 1차원 배열이므로 포인터 역참조 뎁스가 줄어들어 캐시 효율이 높아짐
+        for i in range(len(flat_pattern)):
+            mac_result += flat_pattern[i] * flat_filter[i]
+            
+        return mac_result
+
+
+class PatternGenerator:
+    """
+    [보너스 과제 2] 크기 N 입력 시 NxN 십자가(Cross)와 X 패턴을 자동 생성하는 유틸리티.
+    """
+    
+    @staticmethod
+    def generate_cross(n: int) -> list[list[float]]:
+        # N x N 영행렬(0.0) 생성
+        pattern = [[0.0] * n for _ in range(n)]
+        mid = n // 2
+        
+        # 정중앙의 행(Row)과 열(Column)을 1.0으로 채워 십자가 모양 완성
+        for i in range(n):
+            pattern[mid][i] = 1.0
+            pattern[i][mid] = 1.0
+            
+        return pattern
+
+    @staticmethod
+    def generate_x(n: int) -> list[list[float]]:
+        # N x N 영행렬(0.0) 생성
+        pattern = [[0.0] * n for _ in range(n)]
+        
+        # 좌상단->우하단, 우상단->좌하단 대각선을 1.0으로 채워 X 모양 완성
+        for i in range(n):
+            pattern[i][i] = 1.0
+            pattern[i][n - 1 - i] = 1.0
+            
+        return pattern
+
 class DataValidator:
     """
     입력 데이터의 형식, 차원, 타입 등을 검사하고 정규화하는 방어 계층.
