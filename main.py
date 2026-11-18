@@ -170,3 +170,53 @@ class ResultReporter:
             print("\n실패 케이스:")
             for case in fail_cases:
                 print(f"- {case['id']}: {case['reason']}")
+                
+class NPUSimulator:
+    """
+    사용자 입력을 받아 1~4단계의 모듈들을 조립하고 전체 프로그램 흐름을 제어하는 컨트롤러.
+    """
+    
+    @staticmethod
+    def run():
+        print("=== Mini NPU Simulator ===")
+        print("[모드 선택]\n1. 사용자 입력 (3x3)\n2. data.json 분석")
+        choice = input("선택: ").strip()
+        
+        if choice == '1':
+            NPUSimulator.run_mode_1()
+        elif choice == '2':
+            print("data.json 분석 모드 실행 로직 (통합 테스트용 생략)")
+        else:
+            print("잘못된 입력이야.")
+
+    @staticmethod
+    def run_mode_1():
+        # 1. 문지기(DataValidator)를 통해 안전한 데이터 확보
+        filter_a = DataValidator.get_3x3_matrix("필터 A")
+        filter_b = DataValidator.get_3x3_matrix("필터 B")
+        pattern = DataValidator.get_3x3_matrix("패턴")
+        
+        # 2. 두뇌(MACProcessor)를 통한 코어 연산 및 판정
+        score_a = MACProcessor.calculate_mac(pattern, filter_a)
+        score_b = MACProcessor.calculate_mac(pattern, filter_b)
+        result = MACProcessor.judge_score(score_a, score_b, "A", "B")
+        
+        # 3. 벤치마킹(PerformanceAnalyzer)
+        avg_time = PerformanceAnalyzer.measure_mac_time(pattern, filter_a)
+        
+        # 4. 결과 렌더링
+        print("\n#---------------------------------------")
+        print("# [3] MAC 결과")
+        print("#---------------------------------------")
+        print(f"A 점수: {score_a}")
+        print(f"B 점수: {score_b}")
+        print(f"연산 시간(평균/10회): {avg_time:.3f} ms")
+        
+        if result == "UNDECIDED":
+            print("판정: 판정 불가 (|A-B| < 1e-9)")
+        else:
+            print(f"판정: {result}")
+
+# OS가 이 파일을 직접 실행했을 때만 작동하도록 진입점(Entry Point) 통제
+if __name__ == "__main__":
+    NPUSimulator.run()
