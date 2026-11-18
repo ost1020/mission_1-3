@@ -185,38 +185,133 @@ class NPUSimulator:
         if choice == '1':
             NPUSimulator.run_mode_1()
         elif choice == '2':
-            print("data.json 분석 모드 실행 로직 (통합 테스트용 생략)")
+            NPUSimulator.run_mode_2()
         else:
             print("잘못된 입력이야.")
 
     @staticmethod
     def run_mode_1():
-        # 1. 문지기(DataValidator)를 통해 안전한 데이터 확보
+        # ... (기존 모드 1 코드는 그대로 유지) ...
         filter_a = DataValidator.get_3x3_matrix("필터 A")
         filter_b = DataValidator.get_3x3_matrix("필터 B")
         pattern = DataValidator.get_3x3_matrix("패턴")
         
-        # 2. 두뇌(MACProcessor)를 통한 코어 연산 및 판정
         score_a = MACProcessor.calculate_mac(pattern, filter_a)
         score_b = MACProcessor.calculate_mac(pattern, filter_b)
         result = MACProcessor.judge_score(score_a, score_b, "A", "B")
-        
-        # 3. 벤치마킹(PerformanceAnalyzer)
         avg_time = PerformanceAnalyzer.measure_mac_time(pattern, filter_a)
         
-        # 4. 결과 렌더링
         print("\n#---------------------------------------")
         print("# [3] MAC 결과")
         print("#---------------------------------------")
         print(f"A 점수: {score_a}")
         print(f"B 점수: {score_b}")
         print(f"연산 시간(평균/10회): {avg_time:.3f} ms")
-        
         if result == "UNDECIDED":
             print("판정: 판정 불가 (|A-B| < 1e-9)")
         else:
             print(f"판정: {result}")
 
-# OS가 이 파일을 직접 실행했을 때만 작동하도록 진입점(Entry Point) 통제
+    @staticmethod
+    def run_mode_2():
+        print("\n#---------------------------------------")
+        print("# [1] 필터 로드")
+        print("#---------------------------------------")
+        
+        # 1. JSON 역직렬화
+        data = DataValidator.load_json_data("data.json")
+        if not data:
+            return
+            
+        filters = data.get("filters", {})
+        patterns = data.get("patterns", {})
+        
+        for size_key in filters.keys():
+            print(f"✓ {size_key} 필터 로드 완료 (Cross, X)")
+            
+        print("\n#---------------------------------------")
+        print("# [2] 패턴 분석 (라벨 정규화 적용)")
+        print("#---------------------------------------")
+        
+        total = passed = failed = 0
+        fail_cases = []
+        performance_data = []
+        measured_sizes = set()
+        
+        # 요구사항의 3x3 성능 측정을 위한 더미 데이터 처리
+        dummy_3x3 = [[1.0]*3 for _ in range(3)]
+        time_3x3 = PerformanceAnalyzer.measure_mac_time(dummy_3x3, dummy_3x3)
+        performance_data.append({"size": 3, "time": time_3x3})
+        
+        # 2. 패턴 순회 및 일괄 처리
+        for pat_key, pat_data in patterns.items():
+            total += 1
+            print(f"\n--- {pat_key} ---")
+            
+            raw_expected = pat_data.get("expected", "")
+            expected_label = DataValidator.normalize_label(raw_expected)
+            pattern_mat = pat_data.get("input", [])
+            
+            # 키에서 사이즈 추출 (예: 'size_5_1' -> 'size_5', N=5)
+            size_parts = pat_key.split('_')
+            if len(size_parts) >= 2:
+                filter_key = f"{size_parts[0]}_{size_parts[1]}"
+                n_size = int(size_parts[1])
+            else:
+                continue
+                
+            current_filters = filters.get(filter_key, {})
+            
+            # 필터 라벨 정규화 탐색
+            cross_filter = x_filter = None
+            for k, v in current_filters.items():
+                norm_k = DataValidator.normalize_label(k)
+                if norm_k == "Cross": cross_filter = v
+                elif norm_k == "X": x_filter = v
+                
+            # 3. MAC 연산 및 우아한 실패(Graceful Degradation) 처리
+            try:
+                if not cross_filter or not x_filter:
+                    raise ValueError("해당 크기의 Cross 또는 X 필터를 찾을 수 없음.")
+                
+                # 여기서 차원 불일치 시 ValueError가 발생함
+                score_cross = MACProcessor.calculate_mac(pattern_mat, cross_filter)
+                score_x = MACProcessor.calculate_mac(pattern_mat, x_filter)
+                
+                # 최초 1회만 성능 측정 수행
+                if n_size not in measured_sizes:
+                    avg_time = PerformanceAnalyzer.measure_mac_time(pattern_mat, cross_filter)
+                    performance_data.append({"size": n_size, "time": avg_time})
+                    measured_sizes.add(n_size)
+                    
+            except ValueError as e:
+                # 프로그램 종료 없이 FAIL 처리 후 다음 테스트로 넘어감
+                print(f"FAIL 처리됨 (에러: {e})")
+                failed += 1
+                fail_cases.append({"id": pat_key, "reason": str(e)})
+                continue
+                
+            # 4. 점수 판정 및 패스 여부 확인
+            judgement = MACProcessor.judge_score(score_cross, score_x, "Cross", "X")
+            
+            print(f"Cross 점수: {score_cross}")
+            print(f"X 점수: {score_x}")
+            
+            if judgement == expected_label:
+                print(f"판정: {judgement} | expected: {expected_label} | PASS")
+                passed += 1
+            else:
+                reason = f"판정({judgement}) != 예상({expected_label})"
+                if judgement == "UNDECIDED":
+                    reason = "동점(UNDECIDED) 처리 규칙에 따라 FAIL"
+                print(f"판정: {judgement} | expected: {expected_label} | FAIL")
+                failed += 1
+                fail_cases.append({"id": pat_key, "reason": reason})
+                
+        # 5. 성능 표 및 최종 요약 리포트 출력
+        performance_data.sort(key=lambda x: x["size"])
+        PerformanceAnalyzer.print_performance_table(performance_data)
+        ResultReporter.print_summary(total, passed, failed, fail_cases)
+
 if __name__ == "__main__":
     NPUSimulator.run()
