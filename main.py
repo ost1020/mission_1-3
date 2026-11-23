@@ -14,7 +14,7 @@ class MACProcessor:
         2차원 행렬의 빈 배열 여부, 행/열 크기 일치, 비정형(Jagged) 행렬 여부를 전수 검증해.
         """
         if not pattern or not filter_mat:
-            raise ValueError("입력 배열이 비어있어.")
+            raise ValueError("입력 배열이 비어있어용.")
 
         n_rows = len(pattern)
         if n_rows != len(filter_mat):
@@ -22,7 +22,7 @@ class MACProcessor:
 
         n_cols = len(pattern[0])
         if n_cols == 0:
-            raise ValueError("입력 배열의 열이 비어있어.")
+            raise ValueError("입력 배열의 열이 비어있어용.")
 
         # 모든 행을 순회하며 비정형(Jagged) 행렬 및 필터 열 크기 불일치 방어
         for r in range(n_rows):
@@ -61,7 +61,7 @@ class MACProcessor:
         [보너스 과제 1] 사전 평탄화된 1차원 배열을 단일 루프로 순회하는 최적화된 MAC 연산.
         """
         if not flat_pattern or not flat_filter:
-            raise ValueError("1차원 입력 배열이 비어있어.")
+            raise ValueError("1차원 입력 배열이 비어있어용.")
         if len(flat_pattern) != len(flat_filter):
             raise ValueError(f"1차원 배열 길이 불일치: {len(flat_pattern)} != {len(flat_filter)}")
 
@@ -90,7 +90,7 @@ class PatternGenerator:
     @staticmethod
     def generate_cross(n: int) -> list[list[float]]:
         if n < 1:
-            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해.")
+            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해용.")
 
         pattern = [[0.0] * n for _ in range(n)]
         mid = n // 2
@@ -104,7 +104,7 @@ class PatternGenerator:
     @staticmethod
     def generate_x(n: int) -> list[list[float]]:
         if n < 1:
-            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해.")
+            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해용.")
 
         pattern = [[0.0] * n for _ in range(n)]
 
@@ -145,7 +145,7 @@ class DataValidator:
                 row_input = input().strip().split()
 
                 if len(row_input) != 3:
-                    print(f"입력 형식 오류 ({row_idx}번째 줄): 각 줄에 3개의 숫자를 공백으로 구분해 입력하세요.")
+                    print(f"입력 형식 오류 ({row_idx}번째 줄): 각 줄에 3개의 숫자를 공백으로 구분해 입력하세용.")
                     is_valid = False
                     break
 
@@ -153,14 +153,14 @@ class DataValidator:
                     row = [float(x) for x in row_input]
                     matrix.append(row)
                 except ValueError:
-                    print(f"입력 형식 오류 ({row_idx}번째 줄): 숫자만 공백으로 구분해 입력하세요.")
+                    print(f"입력 형식 오류 ({row_idx}번째 줄): 숫자만 공백으로 구분해 입력하세용.")
                     is_valid = False
                     break
 
             if is_valid and len(matrix) == 3:
                 return matrix
 
-            print(f"{matrix_name} 처음부터 다시 입력:")
+            print(f"{matrix_name} 처음부터 다시 입력하세용:")
 
     @staticmethod
     def get_positive_int(prompt: str, min_val: int = 3) -> int:
@@ -175,12 +175,12 @@ class DataValidator:
                     return value
                 print(f"입력 오류: {min_val} 이상의 정수를 입력해.")
             except ValueError:
-                print("입력 오류: 정수 숫자만 입력해.")
+                print("입력 오류: 정수 숫자만 입력하세용.")
 
     @staticmethod
     def load_json_data(file_path: str) -> dict:
         if not os.path.exists(file_path):
-            print(f"오류: {file_path} 파일을 찾을 수 없어.")
+            print(f"오류: {file_path} 파일을 찾을 수 없어용.")
             return {}
 
         try:
@@ -188,7 +188,7 @@ class DataValidator:
                 data = json.load(f)
             return data
         except json.JSONDecodeError:
-            print("오류: JSON 파일 형식이 올바르지 않아.")
+            print("오류: JSON 파일 형식이 올바르지 않아용.")
             return {}
 
     @staticmethod
@@ -299,7 +299,7 @@ class NPUSimulator:
         elif choice == '3':
             NPUSimulator.run_mode_3()
         else:
-            print("잘못된 입력이야.")
+            print("잘못된 입력이에용.")
 
     @staticmethod
     def run_mode_1():
@@ -407,7 +407,7 @@ class NPUSimulator:
                         x_filter = v
 
                 if not cross_filter or not x_filter:
-                    raise ValueError(f"'{filter_key}' 크기의 Cross 또는 X 필터를 찾을 수 없음.")
+                    raise ValueError(f"'{filter_key}' 크기의 Cross 또는 X 필터를 찾을 수 없어용.")
 
                 score_cross = MACProcessor.calculate_mac(pattern_mat, cross_filter)
                 score_x = MACProcessor.calculate_mac(pattern_mat, x_filter)
@@ -467,7 +467,7 @@ class NPUSimulator:
             PatternGenerator.print_pattern("생성된 Cross 패턴", cross_mat)
             PatternGenerator.print_pattern("생성된 X 패턴", x_mat)
         else:
-            print(f"\n({n}x{n} 크기는 콘솔 가독성을 위해 시각 미리보기를 생략해.)")
+            print(f"\n({n}x{n} 크기는 콘솔 가독성을 위해 시각 미리보기를 생략하세용.)")
 
         # 2D vs 1D 연산 결과 정합성(무결성) 검증
         score_2d_cross = MACProcessor.calculate_mac(cross_mat, cross_mat)
