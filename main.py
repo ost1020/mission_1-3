@@ -90,7 +90,7 @@ class PatternGenerator:
     @staticmethod
     def generate_cross(n: int) -> list[list[float]]:
         if n < 1:
-            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해용.")
+            raise ValueError("패턴 크기 N은 3 이상의 홀수여야 해용.")
 
         pattern = [[0.0] * n for _ in range(n)]
         mid = n // 2
@@ -104,7 +104,7 @@ class PatternGenerator:
     @staticmethod
     def generate_x(n: int) -> list[list[float]]:
         if n < 1:
-            raise ValueError("패턴 크기 N은 1 이상의 정수여야 해용.")
+            raise ValueError("패턴 크기 N은 3 이상의 홀수여야 해용.")
 
         pattern = [[0.0] * n for _ in range(n)]
 
@@ -173,7 +173,7 @@ class DataValidator:
                 value = int(raw)
                 if value >= min_val:
                     return value
-                print(f"입력 오류: {min_val} 이상의 정수를 입력해.")
+                print(f"입력 오류: {min_val} 3 이상의 정수를 입력하세용.")
             except ValueError:
                 print("입력 오류: 정수 숫자만 입력하세용.")
 
@@ -203,7 +203,7 @@ class DataValidator:
 
 class PerformanceAnalyzer:
     """
-    순수 MAC 연산 구간의 실행 시간을 측정(2D vs 1D)하고 성능 벤치마크 표를 출력하는 분석기.
+    순수 MAC 연산 구간의 실행 시간을 측정(2D vs `1`D)하고 성능 벤치마크 표를 출력하는 분석기.
     """
 
     @staticmethod
